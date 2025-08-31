@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Embed Link Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #output-section { transition: opacity 0.3s ease, transform 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-6 md:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-white">Video Embed Fixer</h1>
+                <p class="text-gray-400 mt-2">Create a shareable link that shows a working video embed on Discord, Telegram, and more.</p>
+            </div>
+            <div class="space-y-4">
+                <label for="twitter-link" class="sr-only">X (Twitter) Link</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="twitter-link" placeholder="e.g., https://x.com/user/status/123..." class="w-full px-4 py-3 bg-gray-900 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <button id="generate-btn" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition shadow-md whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
+                        <span>Generate Link</span>
+                    </button>
+                </div>
+            </div>
+            <div id="output-section" class="mt-8 opacity-0 transform -translate-y-2 hidden">
+                <div class="border-t border-gray-700 pt-6">
+                    <p id="error-message" class="text-center text-red-400 mb-4 hidden"></p>
+                    <div id="success-output">
+                        <label for="output-link" class="block text-sm font-medium text-gray-300 mb-2">Your new embeddable link:</label>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="output-link" readonly class="w-full px-4 py-3 bg-gray-700 text-gray-100 border border-gray-600 rounded-lg">
+                            <button id="copy-btn" class="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition shadow-md whitespace-nowrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                <span id="copy-btn-text">Copy</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="text-center mt-8 text-xs text-gray-500">
+                <p>This tool is not affiliated with X Corp. Powered by the official X API.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const generateBtn = document.getElementById('generate-btn');
+        const twitterLinkInput = document.getElementById('twitter-link');
+        const outputSection = document.getElementById('output-section');
+        const outputLinkInput = document.getElementById('output-link');
+        const copyBtn = document.getElementById('copy-btn');
+        const copyBtnText = document.getElementById('copy-btn-text');
+        const errorMessage = document.getElementById('error-message');
+        const successOutput = document.getElementById('success-output');
+
+        const generateLink = () => {
+            const originalUrl = twitterLinkInput.value.trim();
+            const tweetIdRegex = /(?:twitter|x)\.com\/\w+\/status\/(\d+)/;
+            const match = originalUrl.match(tweetIdRegex);
+
+            if (!match || !match[1]) {
+                errorMessage.textContent = 'Could not find a valid Tweet ID in the URL.';
+                errorMessage.classList.remove('hidden');
+                successOutput.classList.add('hidden');
+            } else {
+                const tweetId = match[1];
+                // This will automatically use the domain the site is hosted on (e.g., your-project.vercel.app)
+                const newUrl = `${window.location.origin}/embed/${tweetId}`;
+                outputLinkInput.value = newUrl;
+                
+                errorMessage.classList.add('hidden');
+                successOutput.classList.remove('hidden');
+            }
+            
+            outputSection.classList.remove('hidden');
+            setTimeout(() => {
+                outputSection.classList.remove('opacity-0', 'transform', '-translate-y-2');
+            }, 10);
+        };
+
+        const copyLink = () => {
+            outputLinkInput.select();
+            document.execCommand('copy');
+            copyBtnText.textContent = 'Copied!';
+            copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            copyBtn.classList.add('bg-indigo-600');
+            setTimeout(() => {
+                copyBtnText.textContent = 'Copy';
+                copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                copyBtn.classList.remove('bg-indigo-600');
+            }, 2000);
+        };
+        
+        generateBtn.addEventListener('click', generateLink);
+        copyBtn.addEventListener('click', copyLink);
+        twitterLinkInput.addEventListener('keydown', (e) => e.key === 'Enter' && generateLink());
+    </script>
+
+</body>
+</html>
+
